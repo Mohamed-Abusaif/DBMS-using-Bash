@@ -72,7 +72,7 @@ function insertIntoTable(){
     read -p "Please Enter Your Table Name: " TableName
     if [[ -e  $TableName ]]
     then 
-        echo "Table $TableName already exists"	
+        echo "Table $TableName exists"	
     else 
         touch "$TableName"
         echo "Table $TableName Created Successfully" 	
