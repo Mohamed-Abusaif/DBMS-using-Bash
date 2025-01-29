@@ -22,6 +22,38 @@ function listDb(){
 	ls 
 }
 
+#=========================== choose DB===========================
+function chooseDb(){
+    echo "This is all the DB you have created:"
+    ls
+
+    ## i will put all the list result inside array folder named folders
+    folders=($(ls))
+
+    ## here ana will check if there is no DB or there is no DB  
+    if [ ${#folders[@]} -eq 0 ]; then
+        echo "No DB found ."
+        return
+    fi
+
+    ## hna haDisplay menu
+    echo "Choose a DB to Acess:"
+    select folder_name in "${folders[@]}" "Cancel"; do
+        if [[ $REPLY -le ${#folders[@]} && $REPLY -gt 0 ]]; then
+            # cd the selected DB
+            echo "You selected : $folder_name"
+            cd "$folder_name"
+            echo "we are in DB $folder_name  now."
+            break
+        elif [[ $REPLY -eq $((${#folders[@]} + 1)) ]]; then
+            echo "Operation canceled."
+            break
+        else
+            echo "Invalid option. Please try again."
+        fi
+    done
+}
+
 #=========================== Drop DB===========================
 function dropDb(){
     echo "This is all the folders you have created:"
@@ -55,6 +87,46 @@ function dropDb(){
 }
 
 
+#=========================== Sub Menu ===========================
+function showSubMenu(){
+select choice in CreateTable ListTable DropTable InsertIntoTable SelectFromTable DeleteFromTable  UpdateTable  exit
+do
+  case $choice in 
+"CreateTable")
+             	echo Create Table
+	;;
+"ListTable")
+        echo List Table
+	;;
+"DropTable")
+	echo Drop Table
+	;;
+"InsertIntoTable")
+	echo Insert into Table
+	;;
+"SelectFromTable")
+	echo Select into Table
+	;;
+"DeleteFromTable")
+	echo Delete from Table
+	;;
+"UpdateTable")
+	echo Update from Table
+	;;
+"exit")
+        cd ..
+        echo now You exit the sub menu 
+	break
+	;;
+*)
+	echo Invalid option. Please try again
+esac
+  
+done 
+        
+}
+
+
 ###################################################################
 
 
@@ -64,12 +136,13 @@ function dropDb(){
 
 ################## check Existence####################
 
-if [[ -e  ~/Desktop/BashProj/Databases ]]
+if [[ -e  ~/Desktop/Bash_Proj/DBMS-using-Bash/Databases ]]  #/home/gohaar/Desktop/Bash_Proj/DBMS-using-Bash
 then 
-    cd   ~/Desktop/BashProj/Databases
+    cd   ~/Desktop/Bash_Proj/DBMS-using-Bash/Databases
     echo Database is Ready to connect
 else 
-    mkdir ~/Desktop/BashProj/Databases
+    mkdir ~/Desktop/Bash_Proj/DBMS-using-Bash/Databases
+    cd   ~/Desktop/Bash_Proj/DBMS-using-Bash/Databases
 fi
 
 ###########################################################
@@ -86,12 +159,13 @@ do
         listDb
 	;;
 "ConnectDB")
-	echo Hello student
+         chooseDb
+  	showSubMenu
 	;;
 "DropDB")
 	dropDb
 	;;
-"exit")
+"exit")  
 	break
 	;;
 *)
