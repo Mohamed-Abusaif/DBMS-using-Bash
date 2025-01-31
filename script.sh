@@ -2,6 +2,7 @@
 #! /usr/bin/bash
 shopt -s extglob
 
+source ~/Desktop/Bash_Proj/DBMS-using-Bash/myFunc.sh
 
 ############################ Functions ########################################
 #=========================== Create DB===========================
@@ -93,7 +94,7 @@ select choice in CreateTable ListTable DropTable InsertIntoTable SelectFromTable
 do
   case $choice in 
 "CreateTable")
-             	echo Create Table
+             	createTable
 	;;
 "ListTable")
         echo List Table
