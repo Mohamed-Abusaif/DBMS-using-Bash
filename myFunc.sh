@@ -1,54 +1,35 @@
 #! /usr/bin/bash
 shopt -s extglob
 
-#===================================================================
-#===================================================================
-#===================================================================
-#===================================================================
-#===================================================================
-#===================================================================
-
 #=========================== Create Table===========================
 
-#table is a file inside the directory 
-function createTable(){
+#table is a file inside the directory
+function createTable() {
+
     read -p "Please Enter Your Table Name: " TableName
-    if [[ -e  $TableName ]]
-    then 
-        echo "Table $TableName alreadt exist"	
-    else 
+    if [[ -e $TableName ]]; then
+        echo "Table $TableName exists"
+    else
         touch "$TableName.txt"
-        echo "Table $TableName Created Succsesfully" 
-        touch metadata.txt
-        echo "metadata file created"
-        #create columns 
-
-   
-        read -p "Please Enter Your Primary Key: " PrimaryKey
-        read -p "Please Enter Data Type for Primary Key: " PrimaryKeyDataType
-        echo "$PrimaryKey:$PrimaryKeyDataType" >> metadata.txt
-
-        while true; do
-            read -p "Please Enter Column Name: " ColumnName
-            read -p "Please Enter Data Type for Column: " ColumnDataType
-            echo "$ColumnName:$ColumnDataType" >> metadata.txt
-            read -p "Do you want to add another column? (y/n): " addAnotherColumn
-            if [[ "$addAnotherColumn" == "n" ]]; then
-                break
-            fi
-        done
-
-        echo "Columns Created Successfully"
-
-        
-        
+        touch ".$TableName-metadata.txt"
+        echo "Table $TableName Created Successfully"
     fi
+
+    read -p "Please Enter Number of Columns: " NumberOfColumns
+    for ((i = 1; i <= NumberOfColumns; i++)); do
+        read -p "Please Enter Column Name $i: " ColumnName
+        read -p "Please Enter Column Data Type(int/string) $i: " ColumnDataType
+        echo -n "$ColumnName:" >>"$TableName.txt"
+        echo -n "$ColumnName:" >>".$TableName-metadata.txt"
+        echo "$ColumnDataType" >>".$TableName-metadata.txt"
+    done
+    echo "Table $TableName Created Successfully"
 
 }
 
 #=========================== Drop Table===========================
 
-function dropTable(){
+function dropTable() {
     echo "This is all the Tables you have created:"
     ls
 
@@ -59,7 +40,6 @@ function dropTable(){
         return
     fi
 
-
     echo "Choose a Table to delete:"
 
     select file_name in "${files[@]}" "Cancel"; do
@@ -67,6 +47,7 @@ function dropTable(){
 
             echo "You selected to delete: $file_name"
             rm -r "$file_name"
+            rm -r ".$file_name-metadata.txt"
             echo "Table $file_name deleted successfully."
             break
         elif [[ $REPLY -eq $((${#files[@]} + 1)) ]]; then
@@ -77,89 +58,100 @@ function dropTable(){
         fi
     done
 
-
 }
-
+#=========================== Insert Into Table ===========================
 
 # insert Data into table
+function insertIntoTable() {
+    echo "This is all the Tables you have created:"
+    ls
 
-function insertIntoTable(){
-    read -p "Please Enter Your Table Name: " TableName
-    if [[ -e  $TableName ]]
-    then 
-        echo "Table $TableName exists"	
-    else 
-        touch "$TableName"
-        echo "Table $TableName Created Successfully" 	
+    files=($(ls))
+
+    if [ ${#files[@]} -eq 0 ]; then
+        echo "No files found to insert data into."
+        return
     fi
 
-    # Read the columns from the file
-    columns=$(head -n 1 $TableName)
-    IFS=':' read -r -a columnsArray <<< "$columns"
-    NumberOfColumns=${#columnsArray[@]}
-
-    # Determine the next ID
-    if [[ $(wc -l < $TableName) -eq 1 ]]; then
-        nextID=1
-    else
-        lastID=$(tail -n 1 $TableName | cut -d':' -f1)
-        nextID=$((lastID + 1))
-    fi
-
-    # Get the data to insert and automatically add ID to the data
-    #validate the data entered using the metadata file that contains the datatype of each column
-
-validate_data() {
-    local data=$1
-    local datatype=$2
-
-    case $datatype in
-        int)
-            if ! [[ $data =~ ^[0-9]+$ ]]; then
-                echo "Invalid data: $data is not an integer."
-                return 1
-            fi
-            ;;
-        string)
-            if ! [[ $data =~ ^[a-zA-Z]+$ ]]; then
-                echo "Invalid data: $data is not a string."
-                return 1
-            fi
-            ;;
-        *)
-            echo "Unknown datatype: $datatype"
-            return 1
-            ;;
-    esac
-    return 0
-}
-
-dataToInsert="$nextID"
-for (( i=1; i<NumberOfColumns; i++ )); do
-    datatype=${datatypesArray[i]}
-    while true; do
-        read -p "Please Enter ${columnsArray[i]}: " data
-        if validate_data "$data" "$datatype"; then
+    echo "Choose a Table to insert data into:"
+    select file_name in "${files[@]}" "Cancel"; do
+        if [[ $REPLY -le ${#files[@]} && $REPLY -gt 0 ]]; then
+            echo "You selected to insert into: $file_name"
+            insertData $file_name
+            break
+        elif [[ $REPLY -eq $((${#files[@]} + 1)) ]]; then
+            echo "Insertion canceled."
             break
         else
-            echo "Please enter a valid ${datatype}."
+            echo "Invalid option. Please try again."
         fi
     done
-    dataToInsert="$dataToInsert:$data"
-done
 
-
-    echo $dataToInsert >> $TableName
-    echo "Data Inserted Successfully"
 }
+#=========================== Delete From Table ===========================
 
-# delete from table 
+function deleteFromTable() {
+    echo "This is all the Tables you have created:"
+    ls
 
+    files=($(ls))
+
+    if [ ${#files[@]} -eq 0 ]; then
+        echo "No files found to delete."
+        return
+    fi
+
+    echo "Choose a Table to delete from:"
+    select file_name in "${files[@]}" "Cancel"; do
+        if [[ $REPLY -le ${#files[@]} && $REPLY -gt 0 ]]; then
+            echo "You selected to delete from: $file_name"
+            cat $file_name
+            read -p "Please Enter ID to delete: " ID
+            sed -i "/^$ID:/d" $file_name
+            echo "Row with ID $ID deleted successfully."
+
+            # Delete both the table file and metadata hidden file
+            rm -f "$file_name"
+            rm -f ".$file_name"
+            echo "Table file and metadata hidden file deleted successfully."
+            break
+        elif [[ $REPLY -eq $((${#files[@]} + 1)) ]]; then
+            echo "Deletion canceled."
+            break
+        else
+            echo "Invalid option. Please try again."
+        fi
+    done
+}
 
 # update from table
 
+# list table
+# list all data in table (all lines (rows) in the file) but give list of all tables to choose from in the directory
+function listAllTableData() {
+    echo "This is all the Tables you have created:"
+    ls
 
-# select from table
+    files=($(ls))
 
+    if [ ${#files[@]} -eq 0 ]; then
+        echo "No files found to list."
+        return
+    fi
 
+    echo "Choose a Table to list:"
 
+    select file_name in "${files[@]}" "Cancel"; do
+        if [[ $REPLY -le ${#files[@]} && $REPLY -gt 0 ]]; then
+
+            echo "You selected to list: $file_name"
+            cat $file_name
+            break
+        elif [[ $REPLY -eq $((${#files[@]} + 1)) ]]; then
+            echo "Listing canceled."
+            break
+        else
+            echo "Invalid option. Please try again."
+        fi
+    done
+}
