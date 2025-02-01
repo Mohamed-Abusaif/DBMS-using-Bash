@@ -17,16 +17,31 @@ function createTable(){
     then 
         echo "Table $TableName alreadt exist"	
     else 
-        touch "$TableName"
+        touch "$TableName.txt"
         echo "Table $TableName Created Succsesfully" 
+        touch metadata.txt
+        echo "metadata file created"
         #create columns 
-        read -p "Please Enter Number of Columns: " NumberOfColumns
-        for (( i=1; i<=$NumberOfColumns; i++ ))
-        do
+
+   
+        read -p "Please Enter Your Primary Key: " PrimaryKey
+        read -p "Please Enter Data Type for Primary Key: " PrimaryKeyDataType
+        echo "$PrimaryKey:$PrimaryKeyDataType" >> metadata.txt
+
+        while true; do
             read -p "Please Enter Column Name: " ColumnName
-            echo -n "$ColumnName:" >> $TableName
+            read -p "Please Enter Data Type for Column: " ColumnDataType
+            echo "$ColumnName:$ColumnDataType" >> metadata.txt
+            read -p "Do you want to add another column? (y/n): " addAnotherColumn
+            if [[ "$addAnotherColumn" == "n" ]]; then
+                break
+            fi
         done
-        echo "Columns Created Successfully" 
+
+        echo "Columns Created Successfully"
+
+        
+        
     fi
 
 }
@@ -92,12 +107,47 @@ function insertIntoTable(){
     fi
 
     # Get the data to insert and automatically add ID to the data
-    dataToInsert="$nextID"
-    for (( i=1; i<$NumberOfColumns; i++ ))
-    do
-        read -p "Please Enter Data for ${columnsArray[$i]}: " data
-        dataToInsert="$dataToInsert:$data"
+    #validate the data entered using the metadata file that contains the datatype of each column
+
+validate_data() {
+    local data=$1
+    local datatype=$2
+
+    case $datatype in
+        int)
+            if ! [[ $data =~ ^[0-9]+$ ]]; then
+                echo "Invalid data: $data is not an integer."
+                return 1
+            fi
+            ;;
+        string)
+            if ! [[ $data =~ ^[a-zA-Z]+$ ]]; then
+                echo "Invalid data: $data is not a string."
+                return 1
+            fi
+            ;;
+        *)
+            echo "Unknown datatype: $datatype"
+            return 1
+            ;;
+    esac
+    return 0
+}
+
+dataToInsert="$nextID"
+for (( i=1; i<NumberOfColumns; i++ )); do
+    datatype=${datatypesArray[i]}
+    while true; do
+        read -p "Please Enter ${columnsArray[i]}: " data
+        if validate_data "$data" "$datatype"; then
+            break
+        else
+            echo "Please enter a valid ${datatype}."
+        fi
     done
+    dataToInsert="$dataToInsert:$data"
+done
+
 
     echo $dataToInsert >> $TableName
     echo "Data Inserted Successfully"
