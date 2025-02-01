@@ -2,6 +2,28 @@
 #! /usr/bin/bash
 shopt -s extglob
 
+RED='\e[31m'
+GREEN='\e[32m'
+YELLOW='\e[33m'
+BLUE='\e[34m'
+MAGENTA='\e[35m'
+CYAN='\e[36m'
+WHITE='\e[37m'
+
+# Define background colors
+BG_RED='\e[41m'
+BG_GREEN='\e[42m'
+BG_YELLOW='\e[43m'
+BG_BLUE='\e[44m'
+BG_MAGENTA='\e[45m'
+BG_CYAN='\e[46m'
+BG_WHITE='\e[47m'
+
+# Text attributes
+BOLD='\e[1m'
+UNDERLINE='\e[4m'
+RESET='\e[0m' # Reset to default
+
 source ~/Desktop/Bash_Proj/DBMS-using-Bash/myFunc.sh
 
 ############################ Functions ########################################
@@ -25,25 +47,25 @@ function createDb() {
 
         # Validation 1
         if [[ -z "$DBNAME" ]]; then
-            echo "Error: Database name cannot be empty. Please try again."
+            echo -e "${RED} Error: Database name cannot be empty. Please try again. ${RESET} "
             continue
         fi
 
         # Validation 2
         if [[ ! "$DBNAME" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
-            echo "Error: Database name can only contain letters, numbers, and underscores, must start with a letter"
+            echo -e "${RED} Error: Database name can only contain letters, numbers, and underscores, must start with a letter ${RESET}"
             continue
         fi
 
         # Validation 3
         if [[ ${#DBNAME} -gt 15 ]]; then
-            echo "Error: Database name cannot exceed 64 characters. Please try again."
+            echo -e " ${RED}Error: Database name cannot exceed 64 characters. Please try again. ${RESET} "
             continue
         fi
 
         # Validation 4
         if [[ -e "$DBNAME" ]]; then
-            echo "Error: Database '$DBNAME' already exists. Please choose a different name."
+            echo -e "${RED} Error: Database '$DBNAME' already exists. Please choose a different name. ${RESET}"
             continue
         fi
 
@@ -53,10 +75,9 @@ function createDb() {
         break
     done
 }
-
 #=========================== list DB===========================
 function listDb(){
-        echo "This is all DB You Created"
+        echo -e "${GREEN} This is all DB You Created ${RESET} "
 	ls 
 }
 
@@ -71,7 +92,7 @@ function chooseDb() {
 
     ## Check if there are no databases
     if [ ${#folders[@]} -eq 0 ]; then
-        echo "No DB found."
+        echo -e "${RED}No DB found.${RESET} "
         return
     fi
 
@@ -95,10 +116,10 @@ function chooseDb() {
                 echo "Operation canceled."
                 break
             else
-                echo "Invalid option. Please try again."
+	echo -e "${RED} Invalid option. Please try again ${RESET} " 
             fi
         else
-            echo "Error: Please enter a valid number."
+            echo -e "${RED} Error: Please enter a valid number. ${RESET} "
         fi
     done
 }
@@ -106,7 +127,7 @@ function chooseDb() {
 
 #========================== DropDB ============================================================
 function dropDb() {
-    echo "This is all the DB you have created:"
+    echo -e "${BLUE} This is all the DB you have created: ${RESET} "
     ls
 
     ## i will put all the list result inside array folder named folders
@@ -156,7 +177,7 @@ function dropDb() {
 
             ## Invalids non numbers  or arkam tanya
             *)
-                echo "Error! Please enter a valid number"
+          echo -e "${RED} Invalid option. Please try again ${RESET}" 
                 ;;
         esac
     done
@@ -193,7 +214,7 @@ do
 	break
 	;;
 *)
-	echo Invalid option. Please try again
+	echo -e "${RED} Invalid option. Please try again ${RESET}" 
 esac
   
 done 
@@ -209,13 +230,17 @@ done
 ################################################ Main Code ######################################################################################
 
 ################## check Existence####################
-
+  echo -e "${BOLD}${YELLOW}========================================== ${RESET}"
+  echo "Welcome to Our DBMS"
+  echo -e "${BOLD}${YELLOW}========================================== ${RESET}"
+  
 if [[ -e  ~/Desktop/Bash_Proj/DBMS-using-Bash/Databases ]]  #/home/gohaar/Desktop/Bash_Proj/DBMS-using-Bash
 then 
     cd   ~/Desktop/Bash_Proj/DBMS-using-Bash/Databases
-    echo Database is Ready to connect
+    echo -e "${BG_GREEN} Database is Ready to connect ${RESET}" 
 else 
     mkdir ~/Desktop/Bash_Proj/DBMS-using-Bash/Databases
+     echo -e "${BG_GREEN} Database is Created and Ready to connect ${RESET}"
     cd   ~/Desktop/Bash_Proj/DBMS-using-Bash/Databases
 fi
 
@@ -243,7 +268,7 @@ do
 	break
 	;;
 *)
-	echo Invalid option. Please try again
+	echo -e "${RED} Invalid option. Please try again " 
 esac
 
   
