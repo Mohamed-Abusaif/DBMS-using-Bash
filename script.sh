@@ -43,6 +43,7 @@ function createDb(){
 #=========================== Create DB__2===========================
 function createDb() {
     while true; do
+         clear
         read -p "Please Enter Your Database Name: " DBNAME
 
         # Validation 1
@@ -77,12 +78,14 @@ function createDb() {
 }
 #=========================== list DB===========================
 function listDb() {
+    clear
     echo -e "${GREEN} This is all DB You Created ${RESET} "
     ls
 }
 
 #=========================================Choose DB ======================================================
 function chooseDb() {
+    clear
     echo "This is all the DB you have created:"
     ls
 
@@ -126,63 +129,57 @@ function chooseDb() {
 
 #========================== DropDB ============================================================
 function dropDb() {
+    clear
     echo -e "${BLUE} This is all the DB you have created: ${RESET} "
     ls
 
-    ## i will put all the list result inside array folder named folders
+    ## Put all DB names inside an array
     folders=($(ls))
 
-    ## here ana will check if there is no DB to delete or there is no DB
+    ## Check if there are no databases
     if [ ${#folders[@]} -eq 0 ]; then
         echo "No DB found to delete."
         return
     fi
 
-    ## hna haDisplay menu
+    ## Display menu
     echo "Choose a DB to delete:"
     select folder_name in "${folders[@]}" "Cancel"; do
-        case $REPLY in
-        ## Valid 1 to number of DB the Normal Case
-        [1-9] | [1-9][0-9])
-            if [[ $REPLY -le ${#folders[@]} && $REPLY -gt 0 ]]; then
-                ## Check if the folder exists
-                if [[ -d "$folder_name" ]]; then
-                    ## Confirm deletion
-                    read -p "Are you sure you want to delete '$folder_name'? (y/n): " confirm
-                    if [[ $confirm =~ ^[yY](es)?$ ]]; then
-                        ## try to delete the folder
-                        if rm -r "$folder_name"; then
-                            echo "DB '$folder_name' deleted successfully."
-                        else
-                            echo "Error: Failed to delete '$folder_name'."
-                        fi
-                    else
-                        echo "Deletion canceled."
-                    fi
-                    break
-                else
-                    echo "Error: The DtaBase '$folder_name' does not exist."
-                fi
-            else
-                echo "Invalid option. Please try again."
-            fi
-            ;;
-
-        ## Cancel
-        $((${#folders[@]} + 1)))
+        ## If user selects "Cancel"
+        if [[ $REPLY -eq $((${#folders[@]} + 1)) ]]; then
             echo "Deletion canceled."
             break
-            ;;
+        fi
 
-        ## Invalids non numbers  or arkam tanya
-        *)
+        ## Validate that the selected number is within range
+        if [[ $REPLY -le ${#folders[@]} && $REPLY -gt 0 ]]; then
+            ## Check if the folder exists
+            if [[ -d "$folder_name" ]]; then
+                ## Confirm deletion
+                read -p "Are you sure you want to delete '$folder_name'? (y/n): " confirm
+                if [[ $confirm =~ ^[yY](es)?$ ]]; then
+                    ## Try to delete the folder
+                    if rm -r "$folder_name"; then
+                        echo "DB '$folder_name' deleted successfully."
+                    else
+                        echo "Error: Failed to delete '$folder_name'."
+                    fi
+                else
+                    echo "Deletion canceled."
+                fi
+                break
+            else
+                echo "Error: The Database '$folder_name' does not exist."
+            fi
+        else
             echo -e "${RED} Invalid option. Please try again ${RESET}"
-            ;;
-        esac
+        fi
     done
 }
+
 #=========================== Sub Menu ===========================
 function showSubMenu() {
+  clear
     select choice in CreateTable ListTable DropTable InsertIntoTable SelectFromTable DeleteFromTable UpdateTable exit; do
         case $choice in
         "CreateTable")
@@ -222,12 +219,15 @@ function showSubMenu() {
 
 ###################################################################
 
-################################################ Main Code ######################################################################################
-
+################################################ MainCode #################################################################
+#myFun(){
+#	echo "in myfun"
+#	return 45
+#}
+#myFun
 ################## check Existence####################
-echo -e "${BOLD}${YELLOW}========================================== ${RESET}"
-echo "Welcome to Our DBMS"
-echo -e "${BOLD}${YELLOW}========================================== ${RESET}"
+
+check_Existence(){
 
 if [[ -e ~/Desktop/Bash_Proj/DBMS-using-Bash/Databases ]]; then #/home/gohaar/Desktop/Bash_Proj/DBMS-using-Bash
     cd ~/Desktop/Bash_Proj/DBMS-using-Bash/Databases
@@ -238,7 +238,15 @@ else
     cd ~/Desktop/Bash_Proj/DBMS-using-Bash/Databases
 fi
 
+}
+
 ###########################################################
+MainMenu(){
+  while true ;
+  do
+  echo -e "${BOLD}${YELLOW}========================================== ${RESET}"
+echo "Welcome to Our DBMS"
+echo -e "${BOLD}${YELLOW}========================================== ${RESET}"
 
 select choice in CreateDB ListDB ConnectDB DropDB exit; do
     case $choice in
@@ -246,25 +254,40 @@ select choice in CreateDB ListDB ConnectDB DropDB exit; do
         createDb
         # result=$?
         # echo $result
+          break
         ;;
     "ListDB")
         listDb
+          break
         ;;
     "ConnectDB")
         chooseDb
         #	showSubMenu
+          break
         ;;
     "DropDB")
         dropDb
+          break
         ;;
     "exit")
+        echo "Exiting the script. Goodbye!"
+        exit 0  # Exits the script completely
         break
         ;;
     *)
-        echo -e "${RED} Invalid option. Please try again "
+        echo -e "${RED} Invalid option. Please try again ${RESET} "
+          break
         ;;
     esac
-
 done
+done 
+}
 
 ##############################################################
+
+#------------- this the calling of our main Code -----------------
+
+
+check_Existence
+MainMenu
+
