@@ -6,6 +6,7 @@ source ~/Desktop/Bash_Proj/DBMS-using-Bash/myFunc.sh
 
 ############################ Functions ########################################
 #=========================== Create DB===========================
+: '
 function createDb(){
 	read -p "Please Enter Your Database Name: " DBNAME 
 	if [[ -e  $DBNAME ]]
@@ -16,6 +17,42 @@ function createDb(){
           echo "Database $DBNAME Created Succsesfully" 	
 	fi
 }
+'
+#=========================== Create DB__2===========================
+function createDb() {
+    while true; do
+        read -p "Please Enter Your Database Name: " DBNAME
+
+        # Validation 1
+        if [[ -z "$DBNAME" ]]; then
+            echo "Error: Database name cannot be empty. Please try again."
+            continue
+        fi
+
+        # Validation 2
+        if [[ ! "$DBNAME" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
+            echo "Error: Database name can only contain letters, numbers, and underscores, must start with a letter"
+            continue
+        fi
+
+        # Validation 3
+        if [[ ${#DBNAME} -gt 15 ]]; then
+            echo "Error: Database name cannot exceed 64 characters. Please try again."
+            continue
+        fi
+
+        # Validation 4
+        if [[ -e "$DBNAME" ]]; then
+            echo "Error: Database '$DBNAME' already exists. Please choose a different name."
+            continue
+        fi
+
+        # validations pass
+        mkdir "$DBNAME"
+        echo "Database '$DBNAME' created successfully."
+        break
+    done
+}
 
 #=========================== list DB===========================
 function listDb(){
@@ -23,41 +60,53 @@ function listDb(){
 	ls 
 }
 
-#=========================== choose DB===========================
-function chooseDb(){
+#=========================================Choose DB ======================================================
+function chooseDb() {
     echo "This is all the DB you have created:"
     ls
 
-    ## i will put all the list result inside array folder named folders
-    folders=($(ls))
+    ## i put all DB  into an array 
+    #folders=($(ls))
+      folders=($(ls -d */ 2>/dev/null))
 
-    ## here ana will check if there is no DB or there is no DB  
+    ## Check if there are no databases
     if [ ${#folders[@]} -eq 0 ]; then
-        echo "No DB found ."
+        echo "No DB found."
         return
     fi
 
-    ## hna haDisplay menu
-    echo "Choose a DB to Acess:"
+    ## Display menu
+    echo "Choose a DB to Access:"
     select folder_name in "${folders[@]}" "Cancel"; do
-        if [[ $REPLY -le ${#folders[@]} && $REPLY -gt 0 ]]; then
-            # cd the selected DB
-            echo "You selected : $folder_name"
-            cd "$folder_name"
-            echo "we are in DB $folder_name  now."
-            break
-        elif [[ $REPLY -eq $((${#folders[@]} + 1)) ]]; then
-            echo "Operation canceled."
-            break
+        ## Validate 1
+        if [[ $REPLY =~ ^[0-9]+$ ]]; then
+            if [[ $REPLY -le ${#folders[@]} && $REPLY -gt 0 ]]; then
+                ## Validate 2 Check if the selected directory exists and is accessible
+                if [[ -d "$folder_name" ]]; then
+                    echo "You selected: $folder_name"
+                    cd "$folder_name"
+                    echo "We are in DB $folder_name now."
+                    showSubMenu  #============================= Call the submenu to display here
+                    break
+                else
+                    echo "Error: The selected DB '$folder_name' does not exist or is inaccessible."
+                fi
+            elif [[ $REPLY -eq $((${#folders[@]} + 1)) ]]; then
+                echo "Operation canceled."
+                break
+            else
+                echo "Invalid option. Please try again."
+            fi
         else
-            echo "Invalid option. Please try again."
+            echo "Error: Please enter a valid number."
         fi
     done
 }
 
-#=========================== Drop DB===========================
-function dropDb(){
-    echo "This is all the folders you have created:"
+
+#========================== DropDB ============================================================
+function dropDb() {
+    echo "This is all the DB you have created:"
     ls
 
     ## i will put all the list result inside array folder named folders
@@ -65,29 +114,53 @@ function dropDb(){
 
     ## here ana will check if there is no DB to delete or there is no DB  
     if [ ${#folders[@]} -eq 0 ]; then
-        echo "No folders found to delete."
+        echo "No DB found to delete."
         return
     fi
 
     ## hna haDisplay menu
-    echo "Choose a folder to delete:"
+    echo "Choose a DB to delete:"
     select folder_name in "${folders[@]}" "Cancel"; do
-        if [[ $REPLY -le ${#folders[@]} && $REPLY -gt 0 ]]; then
-            # Delete the selected folder
-            echo "You selected to delete: $folder_name"
-            rm -r "$folder_name"
-            echo "Folder $folder_name deleted successfully."
-            break
-        elif [[ $REPLY -eq $((${#folders[@]} + 1)) ]]; then
-            echo "Deletion canceled."
-            break
-        else
-            echo "Invalid option. Please try again."
-        fi
+        case $REPLY in
+            ## Valid 1 to number of DB the Normal Case
+            [1-9]|[1-9][0-9])
+                if [[ $REPLY -le ${#folders[@]} && $REPLY -gt 0 ]]; then
+                    ## Check if the folder exists
+                    if [[ -d "$folder_name" ]]; then
+                        ## Confirm deletion
+                        read -p "Are you sure you want to delete '$folder_name'? (y/n): " confirm
+                        if [[ $confirm =~ ^[yY](es)?$ ]]; then
+                            ## try to delete the folder
+                            if rm -r "$folder_name"; then
+                                echo "DB '$folder_name' deleted successfully."
+                            else
+                                echo "Error: Failed to delete '$folder_name'."
+                            fi
+                        else
+                            echo "Deletion canceled."
+                        fi
+                        break
+                    else
+                        echo "Error: The DtaBase '$folder_name' does not exist."
+                    fi
+                else
+                    echo "Invalid option. Please try again."
+                fi
+                ;;
+
+            ## Cancel 
+            $((${#folders[@]} + 1)))
+                echo "Deletion canceled."
+                break
+                ;;
+
+            ## Invalids non numbers  or arkam tanya
+            *)
+                echo "Error! Please enter a valid number"
+                ;;
+        esac
     done
 }
-
-
 #=========================== Sub Menu ===========================
 function showSubMenu(){
 select choice in CreateTable ListTable DropTable InsertIntoTable SelectFromTable DeleteFromTable  UpdateTable  exit
@@ -161,7 +234,7 @@ do
 	;;
 "ConnectDB")
          chooseDb
-  	showSubMenu
+  #	showSubMenu
 	;;
 "DropDB")
 	dropDb
