@@ -180,6 +180,8 @@ function dropDb() {
 #=========================== Sub Menu ===========================
 function showSubMenu() {
   clear
+    while true ;
+  do
     select choice in CreateTable ListTable DropTable InsertIntoTable SelectFromTable DeleteFromTable UpdateTable exit; do
         case $choice in
         "CreateTable")
@@ -205,7 +207,7 @@ function showSubMenu() {
             ;;
         "exit")
             cd ..
-            echo now You exit the sub menu
+            echo  -e " ${RED} Exiting the DataBase  ${RESET}"   
             break
             ;;
         *)
@@ -213,6 +215,7 @@ function showSubMenu() {
             ;;
         esac
 
+    done
     done
 
 }
@@ -270,7 +273,7 @@ select choice in CreateDB ListDB ConnectDB DropDB exit; do
           break
         ;;
     "exit")
-        echo "Exiting the script. Goodbye!"
+        echo -e "${RED}Exiting the script. Goodbye!${RESET}"
         exit 0  # Exits the script completely
         break
         ;;
