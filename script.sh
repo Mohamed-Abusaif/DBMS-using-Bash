@@ -25,7 +25,8 @@ UNDERLINE='\e[4m'
 RESET='\e[0m' # Reset to default
 
 source ./myFunc.sh
-
+source ./createTable.sh
+source ./dropTable.sh
 ############################ Functions ########################################
 #=========================== Create DB===========================
 : '
