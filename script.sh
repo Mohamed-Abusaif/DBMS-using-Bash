@@ -178,11 +178,15 @@ function dropDb() {
     done
 }
 
+
+#========================== SelectTB ============================================================
+
+
+
+#======================================================================================
 #=========================== Sub Menu ===========================
 function showSubMenu() {
-  clear
-    while true ;
-  do
+    clear
     select choice in CreateTable ListTable DropTable InsertIntoTable SelectFromTable DeleteFromTable UpdateTable exit; do
         case $choice in
         "CreateTable")
@@ -198,27 +202,24 @@ function showSubMenu() {
             insertIntoTable
             ;;
         "SelectFromTable")
-            echo Select into Table
+            echo "Select from Table"
             ;;
         "DeleteFromTable")
-            echo Delete from Table
+            echo "Delete from Table"
             ;;
         "UpdateTable")
-            echo Update from Table
+            echo "Update from Table"
             ;;
         "exit")
             cd ..
-            echo  -e " ${RED} Exiting the DataBase  ${RESET}"   
+            echo -e "${RED} Exiting the Database ${RESET}"
             break
             ;;
         *)
             echo -e "${RED} Invalid option. Please try again ${RESET}"
             ;;
         esac
-
     done
-    done
-
 }
 
 ###################################################################
