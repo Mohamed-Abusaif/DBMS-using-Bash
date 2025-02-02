@@ -1,0 +1,18 @@
+#! /usr/bin/bash
+shopt -s extglob
+
+
+#=========================== list DB===========================
+function listDb() {
+    clear
+    echo -e "${GREEN} This is all DB You Created ${RESET} "
+    ls
+}
+
+
+
+
+
+
+
+

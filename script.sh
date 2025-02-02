@@ -27,67 +27,20 @@ RESET='\e[0m' # Reset to default
 source ./crud.sh
 source ./createTable.sh
 source ./dropTable.sh
-############################ Functions ########################################
-#=========================== Create DB===========================
-: '
-function createDb(){
-	read -p "Please Enter Your Database Name: " DBNAME 
-	if [[ -e  $DBNAME ]]
-	then 
-	    echo "Database $DBNAME alreadt exist"	
-	else 
-	  mkdir "$DBNAME"
-          echo "Database $DBNAME Created Succsesfully" 	
-	fi
-}
-'
-#=========================== Create DB__2===========================
-function createDb() {
-    while true; do
-         clear
-        read -p "Please Enter Your Database Name: " DBNAME
+source ./createDb
+source ./listDb
+source ./dropDb
+source ./SelectTB
+source ./check_Existence
 
-        # Validation 1
-        if [[ -z "$DBNAME" ]]; then
-            echo -e "${RED} Error: Database name cannot be empty. Please try again. ${RESET} "
-            continue
-        fi
 
-        # Validation 2
-        if [[ ! "$DBNAME" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
-            echo -e "${RED} Error: Database name can only contain letters, numbers, and underscores, must start with a letter ${RESET}"
-            continue
-        fi
+################################### Functions ############################################
 
-        # Validation 3
-        if [[ ${#DBNAME} -gt 15 ]]; then
-            echo -e " ${RED}Error: Database name cannot exceed 64 characters. Please try again. ${RESET} "
-            continue
-        fi
-
-        # Validation 4
-        if [[ -e "$DBNAME" ]]; then
-            echo -e "${RED} Error: Database '$DBNAME' already exists. Please choose a different name. ${RESET}"
-            continue
-        fi
-
-        # validations pass
-        mkdir "$DBNAME"
-        echo "Database '$DBNAME' created successfully."
-        break
-    done
-}
-#=========================== list DB===========================
-function listDb() {
-    clear
-    echo -e "${GREEN} This is all DB You Created ${RESET} "
-    ls
-}
 
 #=========================================Choose DB ======================================================
 function chooseDb() {
     clear
-    echo "This is all the DB you have created:"
+    echo -e "${BG_MAGENTA} This is all the DB you have created: ${RESET}"
     ls
 
     ## i put all DB  into an array
@@ -101,7 +54,7 @@ function chooseDb() {
     fi
 
     ## Display menu
-    echo "Choose a DB to Access:"
+    echo -e "${BLUE}Choose a DB to Access: ${RESET}"
     select folder_name in "${folders[@]}" "Cancel"; do
         ## Validate 1
         if [[ $REPLY =~ ^[0-9]+$ ]]; then
@@ -128,145 +81,15 @@ function chooseDb() {
     done
 }
 
-#========================== DropDB ============================================================
-function dropDb() {
-    clear
-    echo -e "${BLUE} This is all the DB you have created: ${RESET} "
-    ls
-
-    ## Put all DB names inside an array
-    folders=($(ls))
-
-    ## Check if there are no databases
-    if [ ${#folders[@]} -eq 0 ]; then
-        echo "No DB found to delete."
-        return
-    fi
-
-    ## Display menu
-    echo "Choose a DB to delete:"
-    select folder_name in "${folders[@]}" "Cancel"; do
-        ## If user selects "Cancel"
-        if [[ $REPLY -eq $((${#folders[@]} + 1)) ]]; then
-            echo "Deletion canceled."
-            break
-        fi
-
-        ## Validate that the selected number is within range
-        if [[ $REPLY -le ${#folders[@]} && $REPLY -gt 0 ]]; then
-            ## Check if the folder exists
-            if [[ -d "$folder_name" ]]; then
-                ## Confirm deletion
-                read -p "Are you sure you want to delete '$folder_name'? (y/n): " confirm
-                if [[ $confirm =~ ^[yY](es)?$ ]]; then
-                    ## Try to delete the folder
-                    if rm -r "$folder_name"; then
-                        echo "DB '$folder_name' deleted successfully."
-                    else
-                        echo "Error: Failed to delete '$folder_name'."
-                    fi
-                else
-                    echo "Deletion canceled."
-                fi
-                break
-            else
-                echo "Error: The Database '$folder_name' does not exist."
-            fi
-        else
-            echo -e "${RED} Invalid option. Please try again ${RESET}"
-        fi
-    done
-}
 
 
-#========================== SelectTB ============================================================
-
-function SelectTB() {
-    echo -e "${BLUE}This is the list of tables in the database:${RESET}"
-    
-    # List all tables
-    folders=($(ls))
-    
-    # Check if there are no tables
-    if [ ${#folders[@]} -eq 0 ]; then
-        echo -e "${YELLOW}No tables found here.${RESET}"
-        return
-    fi
-
-    # Display a menu to select a table
-    echo "Choose a table to select from:"
-    select TBName in "${folders[@]}" "Back to Menu"; do
-        if [[ $TBName == "Back to Menu" ]]; then
-            echo -e "${GREEN}Returning to the main menu.${RESET}"
-            return
-            break
-        fi
-
-        # Check if the selected table exists
-        if [[ ! -e "$TBName" ]]; then
-            echo -e "${YELLOW}Table '$TBName' does not exist!${RESET}"
-            continue
-        fi
-
-        # Get the primary key column from metadata
-        pkColumn=$(awk -F: '$1 == "pk" {print $2}' ".$TBName-MetaData")
-
-        if [[ -z "$pkColumn" ]]; then
-            echo -e "${RED}Error: No primary key found in metadata!${RESET}"
-            return
-        fi
-
-        # Display options for selecting rows
-        echo -e "${BLUE}Choose an option for table '$TBName':${RESET}"
-        select action in "Select All Rows" "Select by Primary Key" "Back to Table List"; do
-            case $action in
-                "Select All Rows")
-                    if [[ ! -s "$TBName" ]]; then
-                        echo -e "${RED}The table '$TBName' is empty.${RESET}"
-                    else
-                        echo -e "${BLUE}Displaying all records from '$TBName':${RESET}"
-                        cat "$TBName"
-                    fi
-                    break
-                    ;;
-                "Select by Primary Key")
-                    # Get all primary key values from the table
-                    pkValues=($(awk -F: '{print $1}' "$TBName"))
-
-                    if [ ${#pkValues[@]} -eq 0 ]; then
-                        echo -e "${RED}The table '$TBName' is empty.${RESET}"
-                    else
-                        echo -e "${BLUE}Choose a primary key value to select:${RESET}"
-                        select PKValue in "${pkValues[@]}" "Back to Options"; do
-                            if [[ $PKValue == "Back to Options" ]]; then
-                                break
-                            fi
-
-                            # Find the row with the selected primary key
-                            row=$(awk -F: -v pk="$PKValue" '$1 == pk {print $0}' "$TBName")
-
-                            if [[ -z "$row" ]]; then
-                                echo -e "${RED}No record found with $pkColumn = $PKValue.${RESET}"
-                            else
-                                echo -e "${GREEN}The data you selected is: ${row}${RESET}"
-                            fi
-                        done
-                    fi
-                    ;;
-                "Back to Table List")
-                    break
-                    ;;
-                *)
-                    echo -e "${RED}Invalid option. Please try again.${RESET}"
-                    ;;
-            esac
-        done
-    done
-}
 #======================================================================================
 #=========================== Sub Menu ===========================
 function showSubMenu() {
     clear
+echo -e "${BOLD}${YELLOW}========================================== ${RESET}"
+echo -e "${BOLD}${BLUE}Welcome to Our DBMS ${RESET}"
+
     select choice in CreateTable ListTable DropTable InsertIntoTable SelectFromTable DeleteFromTable UpdateTable exit; do
         case $choice in
         "CreateTable")
@@ -303,29 +126,8 @@ function showSubMenu() {
 }
 
 ###################################################################
+##---------------------------------- MainMenu -----------------------------------------------
 
-################################################ MainCode #################################################################
-#myFun(){
-#	echo "in myfun"
-#	return 45
-#}
-#myFun
-################## check Existence####################
-
-check_Existence(){
-
-if [[ -e ~/Desktop/Bash_Proj/DBMS-using-Bash/Databases ]]; then #/home/gohaar/Desktop/Bash_Proj/DBMS-using-Bash
-    cd ~/Desktop/Bash_Proj/DBMS-using-Bash/Databases
-    echo -e "${BG_GREEN} Database is Ready to connect ${RESET}"
-else
-    mkdir ~/Desktop/Bash_Proj/DBMS-using-Bash/Databases
-    echo -e "${BG_GREEN} Database is Created and Ready to connect ${RESET}"
-    cd ~/Desktop/Bash_Proj/DBMS-using-Bash/Databases
-fi
-
-}
-
-###########################################################
 MainMenu(){
   while true ;
   do
@@ -369,9 +171,8 @@ done
 }
 
 ##############################################################
-
+################################################ MainCode #################################################################
 #------------- this the calling of our main Code -----------------
-
 
 check_Existence
 MainMenu

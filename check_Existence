@@ -1,0 +1,27 @@
+#! /usr/bin/bash
+shopt -s extglob
+
+
+################## check Existence####################
+
+check_Existence(){
+
+if [[ -e ~/Desktop/Bash_Proj/DBMS-using-Bash/Databases ]]; then #/home/gohaar/Desktop/Bash_Proj/DBMS-using-Bash
+    cd ~/Desktop/Bash_Proj/DBMS-using-Bash/Databases
+    echo -e "${BG_GREEN} Database is Ready to connect ${RESET}"
+else
+    mkdir ~/Desktop/Bash_Proj/DBMS-using-Bash/Databases
+    echo -e "${BG_GREEN} Database is Created and Ready to connect ${RESET}"
+    cd ~/Desktop/Bash_Proj/DBMS-using-Bash/Databases
+fi
+
+}
+
+
+
+
+
+
+
+
+

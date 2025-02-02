@@ -1,0 +1,61 @@
+#! /usr/bin/bash
+shopt -s extglob
+
+
+#========================== DropDB ============================================================
+function dropDb() {
+    clear
+    echo -e "${BLUE} This is all the DB you have created: ${RESET} "
+    ls
+
+    ## Put all DB names inside an array
+    folders=($(ls))
+
+    ## Check if there are no databases
+    if [ ${#folders[@]} -eq 0 ]; then
+        echo "No DB found to delete."
+        return
+    fi
+
+    ## Display menu
+    echo "Choose a DB to delete:"
+    select folder_name in "${folders[@]}" "Cancel"; do
+        ## If user selects "Cancel"
+        if [[ $REPLY -eq $((${#folders[@]} + 1)) ]]; then
+            echo "Deletion canceled."
+            break
+        fi
+
+        ## Validate that the selected number is within range
+        if [[ $REPLY -le ${#folders[@]} && $REPLY -gt 0 ]]; then
+            ## Check if the folder exists
+            if [[ -d "$folder_name" ]]; then
+                ## Confirm deletion
+                read -p "Are you sure you want to delete '$folder_name'? (y/n): " confirm
+                if [[ $confirm =~ ^[yY](es)?$ ]]; then
+                    ## Try to delete the folder
+                    if rm -r "$folder_name"; then
+                        echo "DB '$folder_name' deleted successfully."
+                    else
+                        echo "Error: Failed to delete '$folder_name'."
+                    fi
+                else
+                    echo "Deletion canceled."
+                fi
+                break
+            else
+                echo "Error: The Database '$folder_name' does not exist."
+            fi
+        else
+            echo -e "${RED} Invalid option. Please try again ${RESET}"
+        fi
+    done
+}
+
+
+
+
+
+
+
+
