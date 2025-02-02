@@ -10,13 +10,12 @@ function createTable() {
     if [[ -e $TableName ]]; then
         echo "Table $TableName exists"
     else
-        #if user enter nothing or space or special characters or numbers or start with numbers or start with space give him warning and ask him to enter valid name
-        while [[ $TableName == "" || $TableName == +([[:space:]]) || $TableName == +([[:punct:]]) || $TableName == +([0-9]) || $TableName == +([0-9])[a-zA-Z]* || $TableName == +([[:space:]])[a-zA-Z]* ]]; do
+        while [[ $TableName == "" || $TableName =~ ^[[:space:]]*$ || $TableName =~ ^[[:punct:]]*$ || $TableName =~ ^[0-9] ]]; do
             echo "Invalid Table Name"
             read -p "Please Enter Your Table Name: " TableName
         done
-        touch "$TableName.txt"
-        touch "$TableName-metadata.txt"
+        touch "$TableName"
+        touch "$TableName-metadata"
         echo "Table $TableName Created Successfully"
     fi
 
@@ -25,9 +24,10 @@ function createTable() {
     while [[ $PrimaryKeyDataType != "int" && $PrimaryKeyDataType != "string" ]]; do
         read -p "Please Enter Primary Key Data Type(int/string): " PrimaryKeyDataType
     done
-    echo -n "$PrimaryKey:" >>"$TableName.txt"
-    echo -n "$PrimaryKey:" >>"$TableName-metadata.txt"
-    echo "$PrimaryKeyDataType:PK" >>"$TableName-metadata.txt"
+
+    # Initialize column names list with primary key
+    columns=("$PrimaryKey")
+    echo "$PrimaryKey:$PrimaryKeyDataType:PK" >>"$TableName-metadata"
 
     read -p "Please Enter Number of Columns: " NumberOfColumns
     for ((i = 1; i <= NumberOfColumns; i++)); do
@@ -36,10 +36,12 @@ function createTable() {
         while [[ $ColumnDataType != "int" && $ColumnDataType != "string" ]]; do
             read -p "Please Enter Column Data Type(int/string) $i: " ColumnDataType
         done
-        echo -n "$ColumnName:" >>"$TableName.txt"
-        echo -n "$ColumnName:" >>"$TableName-metadata.txt"
-        echo "$ColumnDataType" >>"$TableName-metadata.txt"
+        columns+=("$ColumnName")
+        echo "$ColumnName:$ColumnDataType" >>"$TableName-metadata"
     done
-    echo "Table $TableName Created Successfully"
 
+    # Join all column names with ":" and write to the table file
+    echo "${columns[*]}" | tr ' ' ':' >"$TableName"
+
+    echo "Table $TableName Created Successfully"
 }

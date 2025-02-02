@@ -2,8 +2,30 @@
 shopt -s extglob
 
 #=========================== Insert Into Table ===========================
+function readMetadataFile() {
+    local table_file=$1
+    local metadata_file="${table_file}-metadata"
 
-# insert Data into table
+    if [ -f "$metadata_file" ]; then
+        echo "Reading metadata from $metadata_file:"
+
+        column_names=()
+        data_types=()
+
+        while IFS=: read -r column data_type; do
+            column_names+=("$column")
+            data_types+=("$data_type")
+        done <"$metadata_file"
+
+        echo "Columns: ${column_names[*]}"
+        echo "Data Types: ${data_types[*]}"
+    else
+        echo "Metadata file $metadata_file does not exist."
+        return 1
+    fi
+}
+
+# Function to insert data into a table
 function insertIntoTable() {
     echo "This is all the Tables you have created:"
     ls
@@ -19,10 +41,64 @@ function insertIntoTable() {
     select file_name in "${files[@]}" "Cancel"; do
         if [[ $REPLY -le ${#files[@]} && $REPLY -gt 0 ]]; then
             echo "You selected to insert into: $file_name"
-            read -p "Please Enter ID: " ID
-            read -p "Please Enter Data: " DATA
-            echo -e "$ID:$DATA" >> $file_name
-            echo "Data inserted successfully."
+
+            if [ ! -f "$file_name-metadata" ]; then
+                echo "Metadata file not found. Please create a metadata file first."
+                return
+            fi
+
+            readMetadataFile "$file_name"
+
+            if [ ${#column_names[@]} -eq 0 ]; then
+                echo "Error: No columns found in metadata."
+                return
+            fi
+
+            echo "Columns: ${column_names[*]}"
+            echo "Expected Data Types: ${data_types[*]}"
+
+            read -p "Please enter new data (separated by commas): " NEW_DATA
+
+            IFS=',' read -r -a values <<<"$NEW_DATA"
+
+            echo "Entered Values: ${values[*]}"
+
+            if [ ${#values[@]} -ne ${#column_names[@]} ]; then
+                echo "Invalid number of values entered. Expected ${#column_names[@]} values."
+                return
+            fi
+
+            function validateDataTypes() {
+                local value=$1
+                local data_type=$2
+
+                case $data_type in
+                "int")
+                    if [[ ! $value =~ ^[0-9]+$ ]]; then
+                        echo "Invalid data type for '$value'. Expected 'int'."
+                        return 1
+                    fi
+                    ;;
+                "string")
+                    if [[ $value =~ ^[0-9]+$ ]]; then
+                        echo "Invalid data type for '$value'. Expected 'string'."
+                        return 1
+                    fi
+                    ;;
+                esac
+                return 0
+            }
+
+            for i in "${!values[@]}"; do
+                if ! validateDataTypes "${values[$i]}" "${data_types[$i]}"; then
+                    echo "Insertion failed due to data type mismatch."
+                    return
+                fi
+            done
+
+            echo "${values[*]}" >>"$file_name"
+
+            echo "New record inserted successfully."
             break
         elif [[ $REPLY -eq $((${#files[@]} + 1)) ]]; then
             echo "Insertion canceled."
@@ -98,7 +174,6 @@ function listAllTableData() {
     done
 }
 
-
 #=========================== Delete From Table ===========================
 
 function deleteFromTable() {
@@ -134,4 +209,3 @@ function deleteFromTable() {
         fi
     done
 }
-

@@ -11,10 +11,10 @@ function dropTable() {
     echo "Enter the name of the Table you want to drop: "
     read tableName
 
-    if [ -f "$tableName.txt" ]
+    if [ -f "$tableName" ]
     then
-        rm $tableName.txt
-        rm $tableName-metadata.txt
+        rm $tableName
+        rm $tableName-metadata
         echo "Table $tableName has been dropped successfully"
     else
         echo "Table $tableName does not exist"
