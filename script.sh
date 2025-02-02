@@ -88,7 +88,7 @@ function chooseDb() {
 function showSubMenu() {
     clear
 echo -e "${BOLD}${YELLOW}========================================== ${RESET}"
-echo -e "${BOLD}${BLUE}Welcome to Our DBMS ${RESET}"
+echo -e "${BOLD}${BLUE}Welcome to TaBle Menu of This DB  ${RESET}"
 
     select choice in CreateTable ListTable DropTable InsertIntoTable SelectFromTable DeleteFromTable UpdateTable exit; do
         case $choice in
