@@ -8,29 +8,16 @@ function dropTable() {
     echo "This is all the Tables you have created:"
     ls
 
-    files=($(ls))
+    echo "Enter the name of the Table you want to drop: "
+    read tableName
 
-    if [ ${#files[@]} -eq 0 ]; then
-        echo "No files found to delete."
-        return
+    if [ -f "$tableName.txt" ]
+    then
+        rm $tableName.txt
+        rm $tableName-metadata.txt
+        echo "Table $tableName has been dropped successfully"
+    else
+        echo "Table $tableName does not exist"
     fi
-
-    echo "Choose a Table to delete:"
-
-    select file_name in "${files[@]}" "Cancel"; do
-        if [[ $REPLY -le ${#files[@]} && $REPLY -gt 0 ]]; then
-
-            echo "You selected to delete: $file_name"
-            rm -r "$file_name"
-            rm -r ".$file_name-metadata.txt"
-            echo "Table $file_name deleted successfully."
-            break
-        elif [[ $REPLY -eq $((${#files[@]} + 1)) ]]; then
-            echo "Deletion canceled."
-            break
-        else
-            echo "Invalid option. Please try again."
-        fi
-    done
 
 }
