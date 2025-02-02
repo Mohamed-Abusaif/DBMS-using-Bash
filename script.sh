@@ -181,8 +181,88 @@ function dropDb() {
 
 #========================== SelectTB ============================================================
 
+function SelectTB() {
+    echo -e "${BLUE}This is the list of tables in the database:${RESET}"
+    
+    # List all tables
+    folders=($(ls))
+    
+    # Check if there are no tables
+    if [ ${#folders[@]} -eq 0 ]; then
+        echo -e "${YELLOW}No tables found here.${RESET}"
+        return
+    fi
 
+    # Display a menu to select a table
+    echo "Choose a table to select from:"
+    select TBName in "${folders[@]}" "Back to Menu"; do
+        if [[ $TBName == "Back to Menu" ]]; then
+            echo -e "${GREEN}Returning to the main menu.${RESET}"
+            return
+            break
+        fi
 
+        # Check if the selected table exists
+        if [[ ! -e "$TBName" ]]; then
+            echo -e "${YELLOW}Table '$TBName' does not exist!${RESET}"
+            continue
+        fi
+
+        # Get the primary key column from metadata
+        pkColumn=$(awk -F: '$1 == "pk" {print $2}' ".$TBName-MetaData")
+
+        if [[ -z "$pkColumn" ]]; then
+            echo -e "${RED}Error: No primary key found in metadata!${RESET}"
+            return
+        fi
+
+        # Display options for selecting rows
+        echo -e "${BLUE}Choose an option for table '$TBName':${RESET}"
+        select action in "Select All Rows" "Select by Primary Key" "Back to Table List"; do
+            case $action in
+                "Select All Rows")
+                    if [[ ! -s "$TBName" ]]; then
+                        echo -e "${RED}The table '$TBName' is empty.${RESET}"
+                    else
+                        echo -e "${BLUE}Displaying all records from '$TBName':${RESET}"
+                        cat "$TBName"
+                    fi
+                    break
+                    ;;
+                "Select by Primary Key")
+                    # Get all primary key values from the table
+                    pkValues=($(awk -F: '{print $1}' "$TBName"))
+
+                    if [ ${#pkValues[@]} -eq 0 ]; then
+                        echo -e "${RED}The table '$TBName' is empty.${RESET}"
+                    else
+                        echo -e "${BLUE}Choose a primary key value to select:${RESET}"
+                        select PKValue in "${pkValues[@]}" "Back to Options"; do
+                            if [[ $PKValue == "Back to Options" ]]; then
+                                break
+                            fi
+
+                            # Find the row with the selected primary key
+                            row=$(awk -F: -v pk="$PKValue" '$1 == pk {print $0}' "$TBName")
+
+                            if [[ -z "$row" ]]; then
+                                echo -e "${RED}No record found with $pkColumn = $PKValue.${RESET}"
+                            else
+                                echo -e "${GREEN}The data you selected is: ${row}${RESET}"
+                            fi
+                        done
+                    fi
+                    ;;
+                "Back to Table List")
+                    break
+                    ;;
+                *)
+                    echo -e "${RED}Invalid option. Please try again.${RESET}"
+                    ;;
+            esac
+        done
+    done
+}
 #======================================================================================
 #=========================== Sub Menu ===========================
 function showSubMenu() {
@@ -202,7 +282,7 @@ function showSubMenu() {
             insertIntoTable
             ;;
         "SelectFromTable")
-            echo "Select from Table"
+            SelectTB
             ;;
         "DeleteFromTable")
             echo "Delete from Table"
