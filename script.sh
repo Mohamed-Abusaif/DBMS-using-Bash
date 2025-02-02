@@ -200,10 +200,10 @@ function showSubMenu() {
             echo Select into Table
             ;;
         "DeleteFromTable")
-            deleteFromTable
+            echo Delete from Table
             ;;
         "UpdateTable")
-            updateFromTable
+            echo Update from Table
             ;;
         "exit")
             cd ..
