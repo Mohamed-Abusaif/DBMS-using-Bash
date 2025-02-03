@@ -33,9 +33,7 @@ source ./dropDb
 source ./SelectTB
 source ./check_Existence
 
-
 ################################### Functions ############################################
-
 
 #=========================================Choose DB ======================================================
 function chooseDb() {
@@ -81,14 +79,12 @@ function chooseDb() {
     done
 }
 
-
-
 #======================================================================================
 #=========================== Sub Menu ===========================
 function showSubMenu() {
     clear
-echo -e "${BOLD}${YELLOW}========================================== ${RESET}"
-echo -e "${BOLD}${BLUE}Welcome to TaBle Menu of This DB  ${RESET}"
+    echo -e "${BOLD}${YELLOW}========================================== ${RESET}"
+    echo -e "${BOLD}${BLUE}Welcome to TaBle Menu of This DB  ${RESET}"
 
     select choice in CreateTable ListTable DropTable InsertIntoTable SelectFromTable DeleteFromTable UpdateTable exit; do
         case $choice in
@@ -108,10 +104,10 @@ echo -e "${BOLD}${BLUE}Welcome to TaBle Menu of This DB  ${RESET}"
             SelectTB
             ;;
         "DeleteFromTable")
-            echo "Delete from Table"
+            deleteRowFromTable
             ;;
         "UpdateTable")
-            echo "Update from Table"
+            updateRowInTable
             ;;
         "exit")
             cd ..
@@ -128,46 +124,45 @@ echo -e "${BOLD}${BLUE}Welcome to TaBle Menu of This DB  ${RESET}"
 ###################################################################
 ##---------------------------------- MainMenu -----------------------------------------------
 
-MainMenu(){
-  while true ;
-  do
-  echo -e "${BOLD}${YELLOW}========================================== ${RESET}"
-echo "Welcome to Our DBMS"
-echo -e "${BOLD}${YELLOW}========================================== ${RESET}"
+MainMenu() {
+    while true; do
+        echo -e "${BOLD}${YELLOW}========================================== ${RESET}"
+        echo "Welcome to Our DBMS"
+        echo -e "${BOLD}${YELLOW}========================================== ${RESET}"
 
-select choice in CreateDB ListDB ConnectDB DropDB exit; do
-    case $choice in
-    "CreateDB")
-        createDb
-        # result=$?
-        # echo $result
-          break
-        ;;
-    "ListDB")
-        listDb
-          break
-        ;;
-    "ConnectDB")
-        chooseDb
-        #	showSubMenu
-          break
-        ;;
-    "DropDB")
-        dropDb
-          break
-        ;;
-    "exit")
-        echo -e "${RED}Exiting the script. Goodbye!${RESET}"
-        exit 0  # Exits the script completely
-        break
-        ;;
-    *)
-        echo -e "${RED} Invalid option. Please try again ${RESET} "
-          break
-        ;;
-    esac
-done
-done 
+        select choice in CreateDB ListDB ConnectDB DropDB exit; do
+            case $choice in
+            "CreateDB")
+                createDb
+                # result=$?
+                # echo $result
+                break
+                ;;
+            "ListDB")
+                listDb
+                break
+                ;;
+            "ConnectDB")
+                chooseDb
+                #	showSubMenu
+                break
+                ;;
+            "DropDB")
+                dropDb
+                break
+                ;;
+            "exit")
+                echo -e "${RED}Exiting the script. Goodbye!${RESET}"
+                exit 0 # Exits the script completely
+                break
+                ;;
+            *)
+                echo -e "${RED} Invalid option. Please try again ${RESET} "
+                break
+                ;;
+            esac
+        done
+    done
 }
 
 ##############################################################
@@ -176,4 +171,3 @@ done
 
 check_Existence
 MainMenu
-

@@ -111,35 +111,9 @@ function insertIntoTable() {
 
 #=========================== Update From Table ===========================
 
-# update from table
-function updateFromTable() {
-    echo "This is all the Tables you have created:"
-    ls
-
-    files=($(ls))
-
-    if [ ${#files[@]} -eq 0 ]; then
-        echo "No files found to update."
-        return
-    fi
-
-    echo "Choose a Table to update:"
-    select file_name in "${files[@]}" "Cancel"; do
-        if [[ $REPLY -le ${#files[@]} && $REPLY -gt 0 ]]; then
-            echo "You selected to update: $file_name"
-            cat $file_name
-            read -p "Please Enter ID to update: " ID
-            read -p "Please Enter new Data: " NEW_DATA
-            sed -i "/^$ID:/c\\$ID:$NEW_DATA" $file_name
-            echo "Row with ID $ID updated successfully."
-            break
-        elif [[ $REPLY -eq $((${#files[@]} + 1)) ]]; then
-            echo "Update canceled."
-            break
-        else
-            echo "Invalid option. Please try again."
-        fi
-    done
+# Function to update a row in a table
+function updateRowInTable() {
+   
 }
 
 #=========================== List Table ===========================
@@ -176,14 +150,15 @@ function listAllTableData() {
 
 #=========================== Delete From Table ===========================
 
-function deleteFromTable() {
+# Function to delete a row from a table
+function deleteRowFromTable() {
     echo "This is all the Tables you have created:"
     ls
 
     files=($(ls))
 
     if [ ${#files[@]} -eq 0 ]; then
-        echo "No files found to delete."
+        echo "No files found to delete from."
         return
     fi
 
@@ -191,15 +166,32 @@ function deleteFromTable() {
     select file_name in "${files[@]}" "Cancel"; do
         if [[ $REPLY -le ${#files[@]} && $REPLY -gt 0 ]]; then
             echo "You selected to delete from: $file_name"
-            cat $file_name
-            read -p "Please Enter ID to delete: " ID
-            sed -i "/^$ID:/d" $file_name
-            echo "Row with ID $ID deleted successfully."
 
-            # Delete both the table file and metadata hidden file
-            rm -f "$file_name"
-            rm -f ".$file_name"
-            echo "Table file and metadata hidden file deleted successfully."
+            if [ ! -f "$file_name-metadata" ]; then
+                echo "Metadata file not found. Please create a metadata file first."
+                return
+            fi
+
+            readMetadataFile "$file_name"
+
+            if [ ${#column_names[@]} -eq 0 ]; then
+                echo "Error: No columns found in metadata."
+                return
+            fi
+
+            echo "Columns: ${column_names[*]}"
+            echo "Expected Data Types: ${data_types[*]}"
+
+            read -p "Please enter the primary key value of the row to delete: " primary_key_value
+
+            if ! grep -q "^$primary_key_value" "$file_name"; then
+                echo "Row with primary key $primary_key_value not found."
+                return
+            fi
+
+            sed -i "/^$primary_key_value/d" "$file_name"
+
+            echo "Row deleted successfully."
             break
         elif [[ $REPLY -eq $((${#files[@]} + 1)) ]]; then
             echo "Deletion canceled."
