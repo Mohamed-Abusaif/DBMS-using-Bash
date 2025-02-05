@@ -33,7 +33,7 @@ function SelectTB() {
         fi
 
         # Get the primary key column from metadata
-        pkColumn=$(awk -F: '$1 == "pk" {print $2}' ".$TBName-MetaData")
+        pkColumn=$(awk -F: '$3 ~ /PK$/ {print $1}' "$TBName-metadata")
 
         if [[ -z "$pkColumn" ]]; then
             echo -e "${RED}Error: No primary key found in metadata!${RESET}"
@@ -54,8 +54,8 @@ function SelectTB() {
                     break
                     ;;
                 "Select by Primary Key")
-                    # Get all primary key values from the table
-                    pkValues=($(awk -F: '{print $1}' "$TBName"))
+                    # Get all primary key values from the table (first field in each row)
+                    pkValues=($(awk -F, '{print $1}' "$TBName"))
 
                     if [ ${#pkValues[@]} -eq 0 ]; then
                         echo -e "${RED}The table '$TBName' is empty.${RESET}"
@@ -67,7 +67,7 @@ function SelectTB() {
                             fi
 
                             # Find the row with the selected primary key
-                            row=$(awk -F: -v pk="$PKValue" '$1 == pk {print $0}' "$TBName")
+                            row=$(awk -F, -v pk="$PKValue" '$1 == pk {print $0}' "$TBName")
 
                             if [[ -z "$row" ]]; then
                                 echo -e "${RED}No record found with $pkColumn = $PKValue.${RESET}"
@@ -87,8 +87,6 @@ function SelectTB() {
         done
     done
 }
-
-
 
 
 
