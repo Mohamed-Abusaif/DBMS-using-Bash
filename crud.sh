@@ -1,6 +1,27 @@
 #! /usr/bin/bash
 shopt -s extglob
 
+function validateDataTypes() {
+    local value=$1
+    local data_type=$2
+
+    case $data_type in
+    "int")
+        if [[ ! $value =~ ^[0-9]+$ ]]; then
+            echo "Invalid data type for '$value'. Expected 'int'."
+            return 1
+        fi
+        ;;
+    "string")
+        if [[ $value =~ ^[0-9]+$ ]]; then
+            echo "Invalid data type for '$value'. Expected 'string'."
+            return 1
+        fi
+        ;;
+    esac
+    return 0
+}
+
 #=========================== Insert Into Table ===========================
 function readMetadataFile() {
     local table_file=$1
@@ -68,27 +89,6 @@ function insertIntoTable() {
                 return
             fi
 
-            function validateDataTypes() {
-                local value=$1
-                local data_type=$2
-
-                case $data_type in
-                "int")
-                    if [[ ! $value =~ ^[0-9]+$ ]]; then
-                        echo "Invalid data type for '$value'. Expected 'int'."
-                        return 1
-                    fi
-                    ;;
-                "string")
-                    if [[ $value =~ ^[0-9]+$ ]]; then
-                        echo "Invalid data type for '$value'. Expected 'string'."
-                        return 1
-                    fi
-                    ;;
-                esac
-                return 0
-            }
-
             for i in "${!values[@]}"; do
                 if ! validateDataTypes "${values[$i]}" "${data_types[$i]}"; then
                     echo "Insertion failed due to data type mismatch."
@@ -96,7 +96,7 @@ function insertIntoTable() {
                 fi
             done
 
-            echo "${values[*]}" >>"$file_name"
+            echo "${values[*]}" | tr ' ' ',' >>"$file_name"
 
             echo "New record inserted successfully."
             break
@@ -113,7 +113,74 @@ function insertIntoTable() {
 
 # Function to update a row in a table
 function updateRowInTable() {
-   
+    echo "This is all the Tables you have created:"
+    ls
+
+    files=($(ls))
+
+    if [ ${#files[@]} -eq 0 ]; then
+        echo "No files found to update."
+        return
+    fi
+
+    echo "Choose a Table to update:"
+    select file_name in "${files[@]}" "Cancel"; do
+        if [[ $REPLY -le ${#files[@]} && $REPLY -gt 0 ]]; then
+            echo "You selected to update: $file_name"
+
+            if [ ! -f "$file_name-metadata" ]; then
+                echo "Metadata file not found. Please create a metadata file first."
+                return
+            fi
+
+            readMetadataFile "$file_name"
+
+            if [ ${#column_names[@]} -eq 0 ]; then
+                echo "Error: No columns found in metadata."
+                return
+            fi
+
+            echo "Columns: ${column_names[*]}"
+            echo "Expected Data Types: ${data_types[*]}"
+
+            read -p "Please enter the primary key value of the row to update: " primary_key_value
+
+            if ! grep -q "^$primary_key_value," "$file_name"; then
+                echo "Row with primary key $primary_key_value not found."
+                return
+            fi
+
+            read -p "Please enter new data for the row (excluding primary key, separated by commas): " NEW_DATA
+
+            IFS=',' read -r -a values <<<"$NEW_DATA"
+
+            echo "Entered Values: ${values[*]}"
+
+            if [ ${#values[@]} -ne $((${#column_names[@]} - 1)) ]; then
+                echo "Invalid number of values entered. Expected $((${#column_names[@]} - 1)) values."
+                return
+            fi
+
+            for i in "${!values[@]}"; do
+                if ! validateDataTypes "${values[$i]}" "${data_types[$((i + 1))]}"; then
+                    echo "Update failed due to data type mismatch."
+                    return
+                fi
+            done
+
+            # Replace the row with the new values
+            new_row=$(IFS=','; echo "$primary_key_value,${values[*]}")
+            sed -i "s/^$primary_key_value,.*/$new_row/" "$file_name"
+
+            echo "Row updated successfully."
+            break
+        elif [[ $REPLY -eq $((${#files[@]} + 1)) ]]; then
+            echo "Update canceled."
+            break
+        else
+            echo "Invalid option. Please try again."
+        fi
+    done
 }
 
 #=========================== List Table ===========================
