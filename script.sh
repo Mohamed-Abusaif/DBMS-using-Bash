@@ -83,6 +83,7 @@ function chooseDb() {
 #=========================== Sub Menu ===========================
 function showSubMenu() {
     clear
+     while true; do
     echo -e "${BOLD}${YELLOW}========================================== ${RESET}"
     echo -e "${BOLD}${BLUE}Welcome to TaBle Menu of This DB  ${RESET}"
 
@@ -90,34 +91,43 @@ function showSubMenu() {
         case $choice in
         "CreateTable")
             createTable
-            ;;
+                break
+                ;;
         "ListTable")
             listAllTableData
-            ;;
+                break
+                ;;
         "DropTable")
             dropTable
-            ;;
+                break
+                ;;
         "InsertIntoTable")
             insertIntoTable
-            ;;
+                break
+                ;;
         "SelectFromTable")
             SelectTB
-            ;;
+                break
+                ;;
         "DeleteFromTable")
             deleteRowFromTable
-            ;;
+                break
+                ;;
         "UpdateTable")
             updateRowInTable
-            ;;
+                break
+                ;;
         "exit")
             cd ..
             echo -e "${RED} Exiting the Database ${RESET}"
-            break
+            return 
             ;;
         *)
             echo -e "${RED} Invalid option. Please try again ${RESET}"
-            ;;
+                break
+                ;;
         esac
+    done
     done
 }
 

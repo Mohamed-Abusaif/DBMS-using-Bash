@@ -51,7 +51,8 @@ function insertIntoTable() {
     echo "This is all the Tables you have created:"
     ls
 
-    files=($(ls))
+#    files=($(ls))
+     files=($(find . -maxdepth 1 -type f ! -name '*-metadata' -printf "%f\n"))
 
     if [ ${#files[@]} -eq 0 ]; then
         echo "No files found to insert into."
@@ -116,7 +117,8 @@ function updateRowInTable() {
     echo "This is all the Tables you have created:"
     ls
 
-    files=($(ls))
+#    files=($(ls))
+     files=($(find . -maxdepth 1 -type f ! -name '*-metadata' -printf "%f\n"))
 
     if [ ${#files[@]} -eq 0 ]; then
         echo "No files found to update."
@@ -191,7 +193,8 @@ function listAllTableData() {
     echo "This is all the Tables you have created:"
     ls
 
-    files=($(ls))
+    files=($(find . -maxdepth 1 -type f ! -name '*-metadata' -printf "%f\n"))
+
 
     if [ ${#files[@]} -eq 0 ]; then
         echo "No files found to list."
@@ -222,7 +225,8 @@ function deleteRowFromTable() {
     echo "This is all the Tables you have created:"
     ls
 
-    files=($(ls))
+#    files=($(ls))
+    files=($(find . -maxdepth 1 -type f ! -name '*-metadata' -printf "%f\n"))
 
     if [ ${#files[@]} -eq 0 ]; then
         echo "No files found to delete from."
